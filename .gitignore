@@ -3,5 +3,5 @@ dist/
 .astro/
 
 # Local secrets (never commit)
-.env
-.env.local
+.vercel
+.env*
