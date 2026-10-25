@@ -6,15 +6,18 @@ import data from '../data/store.json';
 // without a `path` as noindex, so search engines leave it alone until the store is ready.
 const { products } = data;
 
-// A product goes on sale as soon as it has a Stripe Payment Link in store.json; the rest stay disabled.
-const buyable = products.filter((product) => product.checkout);
+// A product can be bought once it has a Stripe Price ID in store.json; the rest stay disabled.
+const forSale = products.filter((product) => product.priceId);
+const catalogue = products
+  .filter((product) => product.priceId)
+  .map((product) => ({ id: product.id, title: product.title, format: product.format, price: Number(product.price) }));
 ---
 <Base title="Store (Beta) — Jonah Kim" description="Preview of the Jonah Kim store.">
-  <p class="beta-flag"><strong>Preview.</strong> This page is a work in progress and isn&rsquo;t linked from the site.{buyable.length === 0
+  <p class="beta-flag"><strong>Preview.</strong> This page is a work in progress and isn&rsquo;t linked from the site.{forSale.length === 0
     ? ' Checkout isn’t connected yet, so nothing can be bought here.'
-    : buyable.length < products.length
+    : forSale.length < products.length
       ? ' Only the items with a Buy button can be bought so far.'
-      : ' Checkout is live — orders here are real.'}</p>
+      : ' Checkout is live — orders placed here are real.'}</p>
 
   <h1 class="page-title">Store</h1>
   <p class="contact-intro">Signed CDs and sheet music, direct from Jonah.</p>
@@ -36,9 +39,9 @@ const buyable = products.filter((product) => product.checkout);
           </p>
           <p class="product-description">{product.description}</p>
           <div class="product-actions">
-            {product.checkout
-              ? <a class="btn solid" href={product.checkout}>Buy &mdash; ${product.price}</a>
-              : <button type="button" class="btn solid" disabled title="Checkout is not connected yet">Buy</button>}
+            {product.priceId
+              ? <button type="button" class="btn solid" data-add={product.id}>Add to Basket</button>
+              : <button type="button" class="btn solid" disabled title="This item isn’t set up for sale yet">Add to Basket</button>}
             {product.listen && <a class="text-link" href={product.listen} target="_blank" rel="noopener">Listen online</a>}
           </div>
         </div>
@@ -46,13 +49,149 @@ const buyable = products.filter((product) => product.checkout);
     ))}
   </div>
 
+  <section class="basket" id="basket" aria-labelledby="basket-title" hidden>
+    <h2 class="section-title" id="basket-title">Your basket</h2>
+    <ul class="basket-items" id="basket-items"></ul>
+    <div class="basket-foot">
+      <p class="basket-total">Subtotal <span id="basket-total">$0.00</span></p>
+      <p class="basket-note">Shipping and any tax are added at checkout.</p>
+      <button type="button" class="btn solid" id="basket-checkout">Checkout</button>
+      <p class="form-status" id="basket-error" role="status" aria-live="polite" hidden></p>
+    </div>
+  </section>
+
   <div class="notice store-note">
     <p><strong>What still needs doing</strong></p>
     <ul>
-      <li>Jonah creates the Stripe account and a Payment Link per product (see <code>docs/store-setup.md</code>), then each link goes into <code>src/data/store.json</code>.</li>
+      <li>Jonah creates the Stripe products, prices, and shipping rates, and their IDs go into <code>src/data/store.json</code> (see <code>docs/store-setup.md</code>).</li>
+      <li>Add <code>STRIPE_SECRET_KEY</code> to the Vercel project &mdash; test key first, live key when the store opens.</li>
       <li>Confirm the product list, prices, and stock with Jonah &mdash; these are rebuilt from what search engines kept of the old Squarespace store.</li>
       <li>Decide shipping cost and where Jonah ships, and whether the sheet music is printed or a download.</li>
       <li>Add a cover image for the sheet music, and say whether CDs are signed by default.</li>
     </ul>
   </div>
+
+  <script slot="end" is:inline define:vars={{ catalogue }}>
+    // Basket lives in this browser only; the server re-prices everything from the Stripe catalogue at checkout.
+    (function () {
+      var KEY = 'jonah-basket';
+      var items = {};
+      var basket = document.getElementById('basket');
+      var list = document.getElementById('basket-items');
+      var totalEl = document.getElementById('basket-total');
+      var errorEl = document.getElementById('basket-error');
+      var checkout = document.getElementById('basket-checkout');
+      var byId = {};
+      catalogue.forEach(function (product) { byId[product.id] = product; });
+
+      try { items = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { items = {}; }
+      // Drop anything that has since left the catalogue.
+      Object.keys(items).forEach(function (id) { if (!byId[id]) delete items[id]; });
+
+      function save() {
+        try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) { /* private browsing */ }
+      }
+
+      function money(value) { return '$' + value.toFixed(2); }
+
+      function render() {
+        var ids = Object.keys(items);
+        basket.hidden = ids.length === 0;
+        list.textContent = '';
+        var total = 0;
+        ids.forEach(function (id) {
+          var product = byId[id];
+          var quantity = items[id];
+          total += product.price * quantity;
+
+          var row = document.createElement('li');
+          row.className = 'basket-item';
+
+          var name = document.createElement('div');
+          name.className = 'basket-item-name';
+          name.textContent = product.title;
+          var format = document.createElement('span');
+          format.textContent = product.format;
+          name.appendChild(format);
+
+          var controls = document.createElement('div');
+          controls.className = 'basket-qty';
+          [['−', -1, 'Remove one ' + product.title], ['+', 1, 'Add one ' + product.title]].forEach(function (spec, index) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = spec[0];
+            button.setAttribute('aria-label', spec[2]);
+            button.addEventListener('click', function () { change(id, spec[1]); });
+            if (index === 1) {
+              var count = document.createElement('span');
+              count.className = 'basket-count';
+              count.textContent = String(quantity);
+              controls.appendChild(count);
+            }
+            controls.appendChild(button);
+          });
+
+          var lineTotal = document.createElement('div');
+          lineTotal.className = 'basket-line-total';
+          lineTotal.textContent = money(product.price * quantity);
+
+          var remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'basket-remove';
+          remove.textContent = 'Remove';
+          remove.setAttribute('aria-label', 'Remove ' + product.title + ' from the basket');
+          remove.addEventListener('click', function () { delete items[id]; save(); render(); });
+
+          row.appendChild(name);
+          row.appendChild(controls);
+          row.appendChild(lineTotal);
+          row.appendChild(remove);
+          list.appendChild(row);
+        });
+        totalEl.textContent = money(total);
+      }
+
+      function change(id, delta) {
+        var next = (items[id] || 0) + delta;
+        if (next < 1) delete items[id]; else if (next <= 10) items[id] = next;
+        save();
+        render();
+      }
+
+      document.querySelectorAll('[data-add]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          change(button.dataset.add, 1);
+          basket.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      });
+
+      checkout.addEventListener('click', function () {
+        var payload = Object.keys(items).map(function (id) { return { id: id, quantity: items[id] }; });
+        if (payload.length === 0) return;
+        checkout.disabled = true;
+        checkout.textContent = 'Starting checkout…';
+        errorEl.hidden = true;
+
+        fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: payload }),
+        })
+          .then(function (response) {
+            return response.json().catch(function () { return {}; }).then(function (data) {
+              if (!response.ok || !data.url) throw new Error(data.error || 'Checkout could not be started.');
+              window.location.href = data.url;
+            });
+          })
+          .catch(function (err) {
+            errorEl.textContent = err.message + ' Please try again, or email Jonah if it keeps happening.';
+            errorEl.hidden = false;
+            checkout.disabled = false;
+            checkout.textContent = 'Checkout';
+          });
+      });
+
+      render();
+    })();
+  </script>
 </Base>

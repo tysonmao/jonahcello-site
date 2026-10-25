@@ -1,49 +1,73 @@
 # Store setup (Stripe)
 
-The beta store lives at `/betastore` and is not linked from the site. Each product's Buy button
-turns on as soon as that product has a Stripe Payment Link in `src/data/store.json`.
+The beta store lives at `/betastore`. It is not linked from the site, and it only sells what has
+been set up in Stripe: a product with no `priceId` in `src/data/store.json` shows a disabled
+button and cannot go in the basket.
 
-## Why Payment Links
+## How it works
 
-The site is static: there is no server, no database, and no secret keys in this repo. Stripe
-Payment Links keep it that way. Stripe hosts the checkout page and handles card details, the
-shipping address, receipts, and refunds. Nothing sensitive touches this site.
+- The site stays a plain static build, so none of its pages changed.
+- `api/checkout.js` is a single Vercel Function. The basket in the browser sends it only product
+  IDs and quantities; the function looks up the Stripe price for each one and creates a Stripe
+  Checkout session. **Prices are never taken from the browser**, so a tampered basket cannot
+  change what is charged.
+- Stripe hosts the payment page and collects the card and shipping address. Card details never
+  touch this site.
 
-If the store later needs a basket holding several items at once, that needs a server endpoint, a
-Stripe secret key stored in Vercel, and an Astro adapter. Worth doing only once the store earns it.
+## 1. Jonah creates the Stripe account (once)
 
-## What Jonah does (once)
+Jonah has to own the account: it is tied to his bank account and his identity verification.
 
-Jonah has to own the Stripe account: it is tied to his bank account and his identity verification.
+1. Register at https://dashboard.stripe.com/register with jonahkimcello@gmail.com.
+2. Complete "Activate payments": legal name and address, what he sells, the bank account that
+   receives payouts, and an ID check.
+3. Settings → Business: set the statement descriptor (what buyers see on their card statement,
+   e.g. JONAHCELLO) and a support email.
+4. Settings → Team: invite Tyson, so he can set up products and read orders.
 
-1. Create the account at https://dashboard.stripe.com/register using jonahkimcello@gmail.com.
-2. Complete "Activate payments": legal name and address, what he sells, and the bank account that
-   receives payouts. Stripe asks for ID.
-3. Set the public details under Settings → Business: statement descriptor (what buyers see on their
-   card statement, e.g. JONAHCELLO), support email, and a support address.
-4. Invite Tyson under Settings → Team so he can add products and read orders.
+## 2. Build the catalogue in Stripe
 
-## Creating a product link (per product)
+Do all of this in **Test mode** first (the toggle in the Stripe dashboard).
 
-In the Stripe Dashboard, with **Test mode** on while setting up:
-
-1. Product catalog → Add product. Name it exactly as it appears on the site, set the price, and
+1. Product catalog → Add product, one per item. Name it as it appears on the site, set the price,
    upload the cover image.
-2. Payment Links → New → pick the product.
-3. Under options, turn on:
-   - **Collect shipping address** (physical items), limited to the countries Jonah ships to.
-   - **Shipping rates** — add the flat rate(s) he charges.
-   - **Let customers adjust quantity**.
-   - **Limit the number of payments** if stock is finite.
-4. Copy the link and paste it into the matching product's `checkout` field in
-   `src/data/store.json`.
-5. Repeat in **Live mode** once the test purchase works, and replace the test links with the live
-   ones. Test links start with `https://buy.stripe.com/test_`; live ones do not.
+2. Copy each product's **Price ID** (starts with `price_`) into the matching product's `priceId`
+   in `src/data/store.json`.
+3. Settings → Shipping → shipping rates: create the rate(s) Jonah charges. Copy each **Shipping
+   Rate ID** (starts with `shr_`) into `shipping.rateIds` in the same file, cheapest first.
+4. Set `shipping.countries` to the countries he ships to (`["US"]` today).
 
-## Before the store goes public
+The `price` field in `store.json` is only what the page displays; Stripe charges what the Price ID
+says. Keep the two in step.
 
-- Place one real purchase end to end and refund it.
-- Confirm the order email reaches Jonah and that payouts are scheduled to his bank.
-- Decide sales tax. Stripe Tax can calculate and collect it, but it must be switched on and Jonah
-  must register where he has an obligation. Worth asking his accountant.
-- Link the store from the nav again (it was removed when the old Squarespace store broke).
+## 3. Add the key to Vercel
+
+In the Vercel project (jonahcello-site) → Settings → Environment Variables:
+
+- Name: `STRIPE_SECRET_KEY`
+- Value: the **test** secret key (`sk_test_…`) from Stripe → Developers → API keys
+- Environments: Preview and Production
+
+Redeploy afterwards so the function picks it up. The key lives only in Vercel; it is never in this
+repo. If it ever leaks, roll it in Stripe and update it here.
+
+## 4. Test before going live
+
+With the test key in place, buy something on the preview URL using Stripe's test card
+`4242 4242 4242 4242`, any future expiry date, and any CVC. Check that:
+
+- the basket totals match the prices on the page,
+- shipping options appear and the address is collected,
+- the order shows up in the Stripe dashboard with the right items and address,
+- the browser lands back on `/order-complete.html`.
+
+## 5. Go live
+
+1. Repeat step 2 in **Live mode** (products, prices, shipping rates are separate from test mode)
+   and replace the IDs in `store.json` with the live ones.
+2. Replace `STRIPE_SECRET_KEY` in Vercel with the live key (`sk_live_…`).
+3. Place one real order and refund it, to confirm payouts reach Jonah's bank.
+4. Decide sales tax. Stripe Tax can calculate and collect it, but it costs extra per transaction
+   and Jonah must register where he owes it — worth asking his accountant.
+5. Put the Store link back in the nav (`src/layouts/Base.astro`) and in `public/sitemap.xml`, and
+   remove the preview banner from `src/pages/betastore.astro`.

@@ -22,6 +22,8 @@ The repo is connected to Vercel. **Every push to `main` builds the site and publ
 | `public/styles.css` | All styling. |
 | `public/images/` | Photos, album covers, and the logo (`jonah-signature.png`). |
 | `public/` | Everything else copied as-is: favicon, `robots.txt`, `sitemap.xml`. |
+| `src/data/store.json` | **Store items** for the beta store at `/betastore`, including their Stripe price IDs. See `docs/store-setup.md`. |
+| `api/checkout.js` | Vercel Function that turns a basket into a Stripe checkout. Needs `STRIPE_SECRET_KEY` set in Vercel. |
 | `src/pages/contact.astro` | Contact form. Messages are delivered by [Formspree](https://formspree.io) (form `xgaejrra`, in Tyson's Formspree account) to Jonah's inbox. |
 | `vercel.json` | Build settings and redirects from old Squarespace addresses (e.g. `/about`, `/concerts`). |
 
