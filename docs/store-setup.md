@@ -27,18 +27,24 @@ Jonah has to own the account: it is tied to his bank account and his identity ve
 
 ## 2. Build the catalogue in Stripe
 
-Do all of this in **Test mode** first (the toggle in the Stripe dashboard).
+Prices live in `src/data/store.json`, not in Stripe. Stripe only needs a product per item, so the
+page and the charge can never disagree, and there is only one place to edit.
 
-1. Product catalog → Add product, one per item. Name it as it appears on the site, set the price,
-   upload the cover image.
-2. Copy each product's **Price ID** (starts with `price_`) into the matching product's `priceId`
-   in `src/data/store.json`.
-3. Settings → Shipping → shipping rates: create the rate(s) Jonah charges. Copy each **Shipping
-   Rate ID** (starts with `shr_`) into `shipping.rateIds` in the same file, cheapest first.
-4. Set `shipping.countries` to the countries he ships to (`["US"]` today).
+Do this in **Test mode** first (the toggle in the Stripe dashboard).
 
-The `price` field in `store.json` is only what the page displays; Stripe charges what the Price ID
-says. Keep the two in step.
+1. Product catalog → Add product, one per item. Set the name and upload the cover image.
+   When Stripe asks for a price, enter anything or skip it — the site ignores it.
+2. Copy each product's **Product ID** (starts with `prod_`, not `price_`) into the matching
+   product's `stripeProductId` in `src/data/store.json`.
+3. Set each item's `price` in that file. That is both what the page shows and what the card is
+   charged. Set `shipped` to `false` for downloads and `true` for anything posted.
+4. Settings → Shipping → shipping rates: create the rate(s) Jonah charges, and copy each
+   **Shipping Rate ID** (starts with `shr_`) into `shipping.rateIds`, cheapest first. These are
+   only offered when a basket contains a shipped item.
+5. Set `shipping.countries` to the countries he ships to (`["US"]` today).
+
+A basket of downloads alone never asks for a postal address. Stripe does not deliver files, so
+Jonah emails the PDF after those orders.
 
 ## 3. Add the key to Vercel
 
