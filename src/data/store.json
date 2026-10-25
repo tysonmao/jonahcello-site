@@ -1,5 +1,5 @@
 {
-  "note": "Beta store. Prices and titles are reconstructed from the old Squarespace store's search listings; descriptions are new. Checkout is not connected yet.",
+  "note": "Beta store. Prices and titles are reconstructed from the old Squarespace store's search listings; descriptions are new. Add a Stripe Payment Link as `checkout` on a product to turn its button on; products without one stay disabled. See docs/store-setup.md.",
   "products": [
     {
       "id": "approaching-autumn-cd",
@@ -9,7 +9,8 @@
       "compareAt": "19.98",
       "image": "images/1632933394668-GY0ZGKMGR0DQPVJF7Q0S__Album-Cover.jpg",
       "description": "Jonah Kim with pianist Robert Koenig, on Delos. The Kodály Solo Sonata, Mark Abel’s Approaching Autumn, and the Grieg sonata.",
-      "listen": "https://newalbm.link/approachingautumn"
+      "listen": "https://newalbm.link/approachingautumn",
+      "checkout": ""
     },
     {
       "id": "rachmaninoff-barber-cello-sonatas-cd",
@@ -18,7 +19,8 @@
       "price": "14.99",
       "image": "images/1628813632426-CK1TW1MXC10KPJA1LTR4__image-asset.png",
       "description": "Jonah Kim with pianist Sean Kennard, on Delos. The Rachmaninoff Sonata, Op. 19, and the Barber Sonata, Op. 6.",
-      "listen": "https://smarturl.it/kimkennardrachbarber"
+      "listen": "https://smarturl.it/kimkennardrachbarber",
+      "checkout": ""
     },
     {
       "id": "chaconne-sheet-music",
@@ -26,7 +28,8 @@
       "format": "Sheet music",
       "price": "14.95",
       "compareAt": "18.00",
-      "description": "The Chaconne from Bach’s Partita for Violin No. 2 in D minor, BWV 1004, transcribed for cello by Jonah Kim with notes by Edward Aldwell."
+      "description": "The Chaconne from Bach’s Partita for Violin No. 2 in D minor, BWV 1004, transcribed for cello by Jonah Kim with notes by Edward Aldwell.",
+      "checkout": ""
     }
   ]
 }

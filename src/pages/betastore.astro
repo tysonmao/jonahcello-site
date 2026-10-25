@@ -5,9 +5,16 @@ import data from '../data/store.json';
 // Dark launch: this page is not linked from the nav or the sitemap, and Base marks pages
 // without a `path` as noindex, so search engines leave it alone until the store is ready.
 const { products } = data;
+
+// A product goes on sale as soon as it has a Stripe Payment Link in store.json; the rest stay disabled.
+const buyable = products.filter((product) => product.checkout);
 ---
 <Base title="Store (Beta) — Jonah Kim" description="Preview of the Jonah Kim store.">
-  <p class="beta-flag"><strong>Preview.</strong> This page is a work in progress and isn&rsquo;t linked from the site. Checkout isn&rsquo;t connected yet, so nothing can be bought here.</p>
+  <p class="beta-flag"><strong>Preview.</strong> This page is a work in progress and isn&rsquo;t linked from the site.{buyable.length === 0
+    ? ' Checkout isn’t connected yet, so nothing can be bought here.'
+    : buyable.length < products.length
+      ? ' Only the items with a Buy button can be bought so far.'
+      : ' Checkout is live — orders here are real.'}</p>
 
   <h1 class="page-title">Store</h1>
   <p class="contact-intro">Signed CDs and sheet music, direct from Jonah.</p>
@@ -29,7 +36,9 @@ const { products } = data;
           </p>
           <p class="product-description">{product.description}</p>
           <div class="product-actions">
-            <button type="button" class="btn solid" disabled>Add to Cart</button>
+            {product.checkout
+              ? <a class="btn solid" href={product.checkout}>Buy &mdash; ${product.price}</a>
+              : <button type="button" class="btn solid" disabled title="Checkout is not connected yet">Buy</button>}
             {product.listen && <a class="text-link" href={product.listen} target="_blank" rel="noopener">Listen online</a>}
           </div>
         </div>
@@ -40,8 +49,9 @@ const { products } = data;
   <div class="notice store-note">
     <p><strong>What still needs doing</strong></p>
     <ul>
-      <li>Connect checkout (Stripe), including shipping and sales tax.</li>
+      <li>Jonah creates the Stripe account and a Payment Link per product (see <code>docs/store-setup.md</code>), then each link goes into <code>src/data/store.json</code>.</li>
       <li>Confirm the product list, prices, and stock with Jonah &mdash; these are rebuilt from what search engines kept of the old Squarespace store.</li>
+      <li>Decide shipping cost and where Jonah ships, and whether the sheet music is printed or a download.</li>
       <li>Add a cover image for the sheet music, and say whether CDs are signed by default.</li>
     </ul>
   </div>
