@@ -6,33 +6,46 @@ import storeData from '../src/data/store.json' with { type: 'json' };
 const MAX_QUANTITY = 10;
 const CURRENCY = 'usd';
 
+const line = (stripeProductId, price, quantity, adjustable = true) => ({
+  price_data: { currency: CURRENCY, product: stripeProductId, unit_amount: Math.round(Number(price) * 100) },
+  quantity,
+  ...(adjustable && { adjustable_quantity: { enabled: true, minimum: 1, maximum: MAX_QUANTITY } }),
+});
+
 // Exported so the checkout can be tested without calling Stripe.
-export function buildSessionParams(requested, origin) {
+export function buildSessionParams(requested, origin, destination = 'us') {
   // Amounts come from the catalogue on the server, never from the browser, so a tampered
   // basket cannot change what is charged. store.json is the single source of truth for price.
   const lineItems = [];
   let needsShipping = false;
+  let personalizedCount = 0;
 
   for (const item of Array.isArray(requested) ? requested : []) {
     const product = storeData.products.find((candidate) => candidate.id === item?.id);
-    if (!product?.stripeProductId) continue;
+    if (!product?.stripeProductId || product.status !== 'available') continue;
 
     const unitAmount = Math.round(Number(product.price) * 100);
     if (!Number.isFinite(unitAmount) || unitAmount <= 0) continue;
 
     const quantity = Math.min(Math.max(Math.floor(Number(item.quantity) || 0), 1), MAX_QUANTITY);
     if (product.shipped) needsShipping = true;
+    if (item.personalize && product.personalizable) personalizedCount += quantity;
 
-    lineItems.push({
-      price_data: { currency: CURRENCY, product: product.stripeProductId, unit_amount: unitAmount },
-      quantity,
-      adjustable_quantity: { enabled: true, minimum: 1, maximum: MAX_QUANTITY },
-    });
+    lineItems.push(line(product.stripeProductId, product.price, quantity));
   }
 
   if (lineItems.length === 0) return null;
 
-  const shippingRates = (storeData.shipping?.rateIds || []).filter(Boolean);
+  // One personalization charge per signed copy, as its own line so Jonah sees how many to sign.
+  const personalization = storeData.personalization;
+  if (personalizedCount > 0 && personalization?.stripeProductId) {
+    lineItems.push(line(personalization.stripeProductId, personalization.price, personalizedCount, false));
+  }
+
+  // The buyer chooses US or international in the basket. Checkout then only accepts addresses in
+  // that group's countries, so the chosen rate and the delivery address can never disagree.
+  const international = destination === 'international';
+  const zone = international ? storeData.shipping?.international : storeData.shipping?.us;
 
   return {
     mode: 'payment',
@@ -41,10 +54,18 @@ export function buildSessionParams(requested, origin) {
     cancel_url: `${origin}/betastore.html`,
     // A basket of downloads alone never asks for a postal address.
     ...(needsShipping && {
-      shipping_address_collection: { allowed_countries: storeData.shipping?.countries || ['US'] },
-      ...(shippingRates.length > 0 && {
-        shipping_options: shippingRates.map((rate) => ({ shipping_rate: rate })),
-      }),
+      shipping_address_collection: { allowed_countries: zone?.countries || ['US'] },
+      // US prices include shipping, so that rate is $0 and checkout reads "Free".
+      ...(zone?.rateId && { shipping_options: [{ shipping_rate: zone.rateId }] }),
+    }),
+    ...(personalizedCount > 0 && {
+      custom_fields: [{
+        key: 'personalization',
+        label: { type: 'custom', custom: personalization.checkoutQuestion },
+        type: 'text',
+        text: { maximum_length: 100 },
+        optional: false,
+      }],
     }),
   };
 }
@@ -63,7 +84,7 @@ export default async function handler(request, response) {
 
   const body = typeof request.body === 'string' ? safeParse(request.body) : request.body;
   const origin = request.headers.origin || `https://${request.headers.host}`;
-  const params = buildSessionParams(body?.items, origin);
+  const params = buildSessionParams(body?.items, origin, body?.destination === 'international' ? 'international' : 'us');
 
   if (!params) {
     return response.status(400).json({ error: 'Your basket is empty.' });

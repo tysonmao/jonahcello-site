@@ -27,24 +27,47 @@ Jonah has to own the account: it is tied to his bank account and his identity ve
 
 ## 2. Build the catalogue in Stripe
 
-Prices live in `src/data/store.json`, not in Stripe. Stripe only needs a product per item, so the
-page and the charge can never disagree, and there is only one place to edit.
+Prices live in `src/data/store.json`, not in Stripe, and they **include US shipping**. Stripe only
+needs one product per item, so the page and the charge can never disagree.
 
-Do this in **Test mode** first (the toggle in the Stripe dashboard).
+Do this in **Test mode** first.
 
-1. Product catalog → Add product, one per item. Set the name and upload the cover image.
-   When Stripe asks for a price, enter anything or skip it — the site ignores it.
-2. Copy each product's **Product ID** (starts with `prod_`, not `price_`) into the matching
-   product's `stripeProductId` in `src/data/store.json`.
-3. Set each item's `price` in that file. That is both what the page shows and what the card is
-   charged. Set `shipped` to `false` for downloads and `true` for anything posted.
-4. Settings → Shipping → shipping rates: create the rate(s) Jonah charges, and copy each
-   **Shipping Rate ID** (starts with `shr_`) into `shipping.rateIds`, cheapest first. These are
-   only offered when a basket contains a shipped item.
-5. Set `shipping.countries` to the countries he ships to (`["US"]` today).
+1. Put the test secret key in a local `.env` file (it is gitignored and never committed):
 
-A basket of downloads alone never asks for a postal address. Stripe does not deliver files, so
-Jonah emails the PDF after those orders.
+       STRIPE_SECRET_KEY=sk_test_...
+
+2. Create the products:
+
+       node --env-file=.env scripts/stripe-seed.mjs
+
+   It creates one Stripe product per sellable item plus the personalization add-on, writes the
+   `prod_` IDs back into `store.json`, and is safe to re-run — items are matched on a metadata
+   field, so nothing is duplicated.
+
+3. Create two shipping rates by hand in Stripe (Settings → Shipping):
+   - **$0**, named something like "Shipping included" — paste its `shr_` ID into `shipping.us.rateId`
+   - **$20**, named "International shipping" — paste its ID into `shipping.international.rateId`
+
+4. Repeat both steps in **Live mode** when the store opens; test and live objects are separate.
+
+### How shipping works
+
+US prices include postage, so the US rate is $0 and checkout displays "Free". International adds a
+flat charge, chosen by the buyer in the basket. The checkout only accepts addresses in the country
+list for whichever option they picked, so the rate charged and the address given always match.
+A basket of downloads alone never asks for an address at all.
+
+### Editing the catalogue
+
+Everything is `src/data/store.json`:
+
+- `price` — what the page shows and the card is charged.
+- `status` — `available`, `out-of-stock` or `coming-soon`. Only `available` items can be bought,
+  and the server refuses the rest even if someone forges a request.
+- `shipped` — `false` for downloads.
+- `personalizable` — offers the +$15 signed option, and asks at checkout who to make it out to.
+
+New items need a Stripe product, so re-run the seed script after adding one.
 
 ## 3. Add the key to Vercel
 

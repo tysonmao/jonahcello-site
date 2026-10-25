@@ -1,45 +1,271 @@
 {
-  "note": "Beta store. The `price` here is the single source of truth: it is what the page shows AND what Stripe charges, so the two can never drift. `stripeProductId` is the item's Stripe product (prod_...), created once in Stripe with no price attached. `shipped` marks items that need a postal address; a basket of downloads only skips shipping entirely. A product with no stripeProductId cannot be bought. See docs/store-setup.md.",
+  "note": "Beta store. `price` is the single source of truth: the page shows it and Stripe charges it, and it INCLUDES US shipping. `stripeProductId` is the item's Stripe product (prod_...), created by scripts/stripe-seed.mjs. `status` is available | out-of-stock | coming-soon; only available items with a product ID can be bought. `shipped` false means a download: a basket of those alone never asks for an address. See docs/store-setup.md.",
+  "shipping": {
+    "note": "US prices include shipping, so the US rate is a $0 Stripe rate that shows as 'Free'. International adds a flat charge. The buyer picks the destination in the basket, and the checkout only accepts addresses in the countries listed for that choice, so the two can never disagree.",
+    "us": {
+      "rateId": "",
+      "countries": [
+        "US"
+      ]
+    },
+    "international": {
+      "rateId": "",
+      "price": "20.00",
+      "countries": [
+        "CA",
+        "MX",
+        "GB",
+        "IE",
+        "FR",
+        "DE",
+        "NL",
+        "BE",
+        "LU",
+        "CH",
+        "AT",
+        "IT",
+        "ES",
+        "PT",
+        "SE",
+        "NO",
+        "DK",
+        "FI",
+        "IS",
+        "PL",
+        "CZ",
+        "HU",
+        "GR",
+        "AU",
+        "NZ",
+        "JP",
+        "KR",
+        "TW",
+        "HK",
+        "SG",
+        "IL",
+        "AE",
+        "BR",
+        "CL",
+        "ZA"
+      ]
+    }
+  },
+  "personalization": {
+    "id": "personalization",
+    "price": "15.00",
+    "label": "Signed and personalized by Jonah",
+    "price_label": "+$15",
+    "cdNote": "Cellophane is removed from signed CDs.",
+    "checkoutQuestion": "Who should Jonah make it out to?",
+    "stripeProductId": ""
+  },
   "products": [
     {
       "id": "approaching-autumn-cd",
       "title": "Approaching Autumn",
       "format": "CD",
-      "price": "15.99",
-      "compareAt": "19.98",
-      "image": "images/1632933394668-GY0ZGKMGR0DQPVJF7Q0S__Album-Cover.jpg",
-      "description": "Jonah Kim with pianist Robert Koenig, on Delos. The Kodály Solo Sonata, Mark Abel’s Approaching Autumn, and the Grieg sonata.",
-      "listen": "https://newalbm.link/approachingautumn",
+      "price": "25.00",
+      "status": "available",
       "shipped": true,
-      "stripeProductId": ""
+      "personalizable": true,
+      "description": "With pianist Robert Koenig, on Delos. The Kodály Solo Sonata, Mark Abel’s Approaching Autumn, and the Grieg sonata.",
+      "stripeProductId": "",
+      "image": "images/1632933394668-GY0ZGKMGR0DQPVJF7Q0S__Album-Cover.jpg",
+      "listen": "https://newalbm.link/approachingautumn"
     },
     {
-      "id": "rachmaninoff-barber-cello-sonatas-cd",
+      "id": "rachmaninoff-barber-cd",
       "title": "Rachmaninoff & Barber: Cello Sonatas",
       "format": "CD",
-      "price": "14.99",
-      "image": "images/1628813632426-CK1TW1MXC10KPJA1LTR4__image-asset.png",
-      "description": "Jonah Kim with pianist Sean Kennard, on Delos. The Rachmaninoff Sonata, Op. 19, and the Barber Sonata, Op. 6.",
-      "listen": "https://smarturl.it/kimkennardrachbarber",
+      "price": "25.00",
+      "status": "available",
       "shipped": true,
+      "personalizable": true,
+      "description": "With pianist Sean Kennard, on Delos. The Rachmaninoff Sonata, Op. 19, and the Barber Sonata, Op. 6.",
+      "stripeProductId": "",
+      "image": "images/1628813632426-CK1TW1MXC10KPJA1LTR4__image-asset.png",
+      "listen": "https://smarturl.it/kimkennardrachbarber"
+    },
+    {
+      "id": "beyond-the-pacific-cd",
+      "title": "Beyond the Pacific",
+      "format": "CD",
+      "price": "25.00",
+      "status": "available",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Trio Barclay’s debut album on Orchid Classics: new piano trios by Sheridan Seyfried, John Wineglass and Michael Fine.",
+      "stripeProductId": "",
+      "image": "images/beyond-the-pacific-cover.jpg",
+      "listen": "https://orchid-music.lnk.to/BeyondThePacificWE"
+    },
+    {
+      "id": "trinity-cd",
+      "title": "Trinity",
+      "format": "CD",
+      "price": "25.00",
+      "status": "available",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Trio Barclay.",
       "stripeProductId": ""
     },
     {
-      "id": "chaconne-sheet-music",
-      "title": "Bach Chaconne",
-      "format": "Sheet music",
-      "price": "14.95",
-      "compareAt": "18.00",
-      "description": "The Chaconne from Bach’s Partita for Violin No. 2 in D minor, BWV 1004, transcribed for cello by Jonah Kim with notes by Edward Aldwell.",
+      "id": "bach-i-adoration-cd",
+      "title": "Bach I: Adoration",
+      "format": "CD",
+      "price": "15.00",
+      "status": "available",
       "shipped": true,
+      "personalizable": true,
+      "description": "Bach Cello Suite No. 1, arranged and performed by Jonah Kim.",
+      "stripeProductId": "",
+      "image": "images/1584594505178-JNNRGNJPUL7GSKQJMDZ5__image-asset.jpeg"
+    },
+    {
+      "id": "bach-ii-temptation-cd",
+      "title": "Bach II: Temptation",
+      "format": "CD",
+      "price": "15.00",
+      "status": "available",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Bach Cello Suite No. 2.",
+      "stripeProductId": "",
+      "image": "images/1584594732917-5IQHCZL8TWNH55HCIZYP__image-asset.jpeg"
+    },
+    {
+      "id": "bach-iii-mission-cd",
+      "title": "Bach III: Mission",
+      "format": "CD",
+      "price": "15.00",
+      "status": "available",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Bach Cello Suite No. 3.",
+      "stripeProductId": "",
+      "image": "images/1585549921901-93LM07J57BQI3RSQ3ETD__BachSuite3-online-cover.jpg"
+    },
+    {
+      "id": "bach-iv-cd",
+      "title": "Bach IV",
+      "format": "CD",
+      "price": "15.00",
+      "status": "out-of-stock",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Bach Cello Suite No. 4.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "bach-v-cd",
+      "title": "Bach V",
+      "format": "CD",
+      "price": "15.00",
+      "status": "out-of-stock",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Bach Cello Suite No. 5.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "bach-vi-cd",
+      "title": "Bach VI",
+      "format": "CD",
+      "price": "15.00",
+      "status": "out-of-stock",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Bach Cello Suite No. 6.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "bach-chaconne-print",
+      "title": "Bach Chaconne",
+      "format": "Printed score",
+      "price": "20.00",
+      "status": "available",
+      "shipped": true,
+      "personalizable": true,
+      "description": "The Chaconne from Bach’s Partita for Violin No. 2, transcribed for cello by Jonah Kim with notes by Edward Aldwell.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "bach-chaconne-pdf",
+      "title": "Bach Chaconne",
+      "format": "PDF download",
+      "price": "15.00",
+      "status": "available",
+      "shipped": false,
+      "personalizable": false,
+      "description": "The same transcription as a PDF, emailed after your order.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "trinity-hymns-print",
+      "title": "Trinity: Hymns for Piano Trio",
+      "format": "Printed score",
+      "price": "65.00",
+      "status": "available",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Hymns arranged for piano trio.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "trinity-hymns-pdf",
+      "title": "Trinity: Hymns for Piano Trio",
+      "format": "PDF download",
+      "price": "55.00",
+      "status": "available",
+      "shipped": false,
+      "personalizable": false,
+      "description": "Hymns arranged for piano trio, emailed after your order.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "popular-songs-print",
+      "title": "Popular Songs for Two Cellos",
+      "format": "Printed score",
+      "price": "65.00",
+      "status": "coming-soon",
+      "shipped": true,
+      "personalizable": true,
+      "description": "Arrangements for two cellos, including Pompeii, Dynamite and Africa.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "popular-songs-pdf",
+      "title": "Popular Songs for Two Cellos",
+      "format": "PDF download",
+      "price": "55.00",
+      "status": "coming-soon",
+      "shipped": false,
+      "personalizable": false,
+      "description": "Arrangements for two cellos, including Pompeii, Dynamite and Africa.",
+      "stripeProductId": ""
+    },
+    {
+      "id": "american-songbook-print",
+      "title": "The Great American Songbook",
+      "format": "Printed score",
+      "price": "130.00",
+      "status": "coming-soon",
+      "shipped": true,
+      "personalizable": true,
+      "description": "",
+      "stripeProductId": ""
+    },
+    {
+      "id": "american-songbook-pdf",
+      "title": "The Great American Songbook",
+      "format": "PDF download",
+      "price": "110.00",
+      "status": "coming-soon",
+      "shipped": false,
+      "personalizable": false,
+      "description": "",
       "stripeProductId": ""
     }
-  ],
-  "shipping": {
-    "note": "Stripe Shipping Rate IDs (shr_...) offered when a basket contains a shipped item, cheapest first.",
-    "rateIds": [],
-    "countries": [
-      "US"
-    ]
-  }
+  ]
 }

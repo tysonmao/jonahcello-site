@@ -4,27 +4,34 @@ import data from '../data/store.json';
 
 // Dark launch: this page is not linked from the nav or the sitemap, and Base marks pages
 // without a `path` as noindex, so search engines leave it alone until the store is ready.
-const { products } = data;
+const { products, personalization, shipping } = data;
 
-// A product can be bought once it has a Stripe Price ID in store.json; the rest stay disabled.
-const forSale = products.filter((product) => product.priceId);
-const catalogue = products
-  .filter((product) => product.priceId)
-  .map((product) => ({ id: product.id, title: product.title, format: product.format, price: Number(product.price) }));
+const sellable = (product) => product.status === 'available' && product.stripeProductId;
+const liveCount = products.filter(sellable).length;
+
+// Only what can actually be bought is handed to the browser; the server re-prices it all anyway.
+const catalogue = products.filter(sellable).map((product) => ({
+  id: product.id,
+  title: product.title,
+  format: product.format,
+  price: Number(product.price),
+  shipped: product.shipped,
+  personalizable: product.personalizable,
+}));
+
+const statusLabel = { 'out-of-stock': 'Out of stock', 'coming-soon': 'Coming soon' };
 ---
 <Base title="Store (Beta) — Jonah Kim" description="Preview of the Jonah Kim store.">
-  <p class="beta-flag"><strong>Preview.</strong> This page is a work in progress and isn&rsquo;t linked from the site.{forSale.length === 0
+  <p class="beta-flag"><strong>Preview.</strong> This page is a work in progress and isn&rsquo;t linked from the site.{liveCount === 0
     ? ' Checkout isn’t connected yet, so nothing can be bought here.'
-    : forSale.length < products.length
-      ? ' Only the items with a Buy button can be bought so far.'
-      : ' Checkout is live — orders placed here are real.'}</p>
+    : ' Checkout runs in Stripe test mode — no real card is charged.'}</p>
 
   <h1 class="page-title">Store</h1>
-  <p class="contact-intro">Signed CDs and sheet music, direct from Jonah.</p>
+  <p class="contact-intro">Signed CDs and sheet music, direct from Jonah. Prices include US shipping.</p>
 
   <div class="store-grid">
     {products.map((product) => (
-      <div class="product">
+      <div class={`product${product.status === 'available' ? '' : ' product-unavailable'}`}>
         <div class="product-media">
           {product.image
             ? <img src={product.image} alt={`${product.title} cover`} loading="lazy" width="1000" height="1000">
@@ -33,15 +40,12 @@ const catalogue = products
         <div class="product-body">
           <p class="product-format">{product.format}</p>
           <h2>{product.title}</h2>
-          <p class="product-price">
-            <span class="price-now">${product.price}</span>
-            {product.compareAt && <span class="price-was">${product.compareAt}</span>}
-          </p>
-          <p class="product-description">{product.description}</p>
+          <p class="product-price"><span class="price-now">${product.price}</span></p>
+          {product.description && <p class="product-description">{product.description}</p>}
           <div class="product-actions">
-            {product.priceId
+            {sellable(product)
               ? <button type="button" class="btn solid" data-add={product.id}>Add to Basket</button>
-              : <button type="button" class="btn solid" disabled title="This item isn’t set up for sale yet">Add to Basket</button>}
+              : <span class="product-status">{statusLabel[product.status] ?? 'Not yet available'}</span>}
             {product.listen && <a class="text-link" href={product.listen} target="_blank" rel="noopener">Listen online</a>}
           </div>
         </div>
@@ -52,57 +56,73 @@ const catalogue = products
   <section class="basket" id="basket" aria-labelledby="basket-title" hidden>
     <h2 class="section-title" id="basket-title">Your basket</h2>
     <ul class="basket-items" id="basket-items"></ul>
+
+    <div class="basket-destination" id="basket-destination" hidden>
+      <span class="basket-destination-label">Deliver to</span>
+      <label><input type="radio" name="destination" value="us" checked> United States &mdash; shipping included</label>
+      <label><input type="radio" name="destination" value="international"> Outside the US &mdash; adds ${shipping.international.price}</label>
+    </div>
+
     <div class="basket-foot">
-      <p class="basket-total">Subtotal <span id="basket-total">$0.00</span></p>
-      <p class="basket-note">Shipping and any tax are added at checkout.</p>
+      <p class="basket-total">Total <span id="basket-total">$0.00</span></p>
+      <p class="basket-note" id="basket-note"></p>
       <button type="button" class="btn solid" id="basket-checkout">Checkout</button>
       <p class="form-status" id="basket-error" role="status" aria-live="polite" hidden></p>
     </div>
   </section>
 
   <div class="notice store-note">
-    <p><strong>What still needs doing</strong></p>
+    <p><strong>Still to do</strong></p>
     <ul>
-      <li>Jonah creates the Stripe products, prices, and shipping rates, and their IDs go into <code>src/data/store.json</code> (see <code>docs/store-setup.md</code>).</li>
-      <li>Add <code>STRIPE_SECRET_KEY</code> to the Vercel project &mdash; test key first, live key when the store opens.</li>
-      <li>Confirm the product list, prices, and stock with Jonah &mdash; these are rebuilt from what search engines kept of the old Squarespace store.</li>
-      <li>Decide shipping cost and where Jonah ships, and whether the sheet music is printed or a download.</li>
-      <li>Add a cover image for the sheet music, and say whether CDs are signed by default.</li>
+      <li>Run <code>scripts/stripe-seed.mjs</code> with Jonah&rsquo;s test key to create the Stripe products.</li>
+      <li>Create the $0 US and ${shipping.international.price} international shipping rates in Stripe and paste their IDs into <code>src/data/store.json</code>.</li>
+      <li>Add <code>STRIPE_SECRET_KEY</code> to the Vercel project.</li>
+      <li>Cover art for Trinity, the sheet music, and Bach IV&ndash;VI.</li>
+      <li>Apparel once it is restocked; individual song PDFs once the titles are known.</li>
     </ul>
   </div>
 
-  <script slot="end" is:inline define:vars={{ catalogue }}>
-    // Basket lives in this browser only; the server re-prices everything from the Stripe catalogue at checkout.
+  <script slot="end" is:inline define:vars={{ catalogue, personalization, intlPrice: Number(shipping.international.price) }}>
+    // Basket lives in this browser only; the server re-prices everything from the catalogue at checkout.
     (function () {
-      var KEY = 'jonah-basket';
+      var KEY = 'jonah-basket-v2';
       var items = {};
       var basket = document.getElementById('basket');
       var list = document.getElementById('basket-items');
       var totalEl = document.getElementById('basket-total');
+      var noteEl = document.getElementById('basket-note');
       var errorEl = document.getElementById('basket-error');
       var checkout = document.getElementById('basket-checkout');
+      var destinationBox = document.getElementById('basket-destination');
       var byId = {};
       catalogue.forEach(function (product) { byId[product.id] = product; });
 
       try { items = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { items = {}; }
-      // Drop anything that has since left the catalogue.
       Object.keys(items).forEach(function (id) { if (!byId[id]) delete items[id]; });
 
       function save() {
         try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) { /* private browsing */ }
       }
-
       function money(value) { return '$' + value.toFixed(2); }
+      function destination() {
+        var picked = document.querySelector('input[name="destination"]:checked');
+        return picked ? picked.value : 'us';
+      }
 
       function render() {
         var ids = Object.keys(items);
         basket.hidden = ids.length === 0;
         list.textContent = '';
         var total = 0;
+        var anyShipped = false;
+        var signedCount = 0;
+
         ids.forEach(function (id) {
           var product = byId[id];
-          var quantity = items[id];
-          total += product.price * quantity;
+          var entry = items[id];
+          total += product.price * entry.quantity;
+          if (product.shipped) anyShipped = true;
+          if (entry.personalize) signedCount += entry.quantity;
 
           var row = document.createElement('li');
           row.className = 'basket-item';
@@ -113,6 +133,22 @@ const catalogue = products
           var format = document.createElement('span');
           format.textContent = product.format;
           name.appendChild(format);
+
+          if (product.personalizable) {
+            var personalizeLabel = document.createElement('label');
+            personalizeLabel.className = 'basket-personalize';
+            var box = document.createElement('input');
+            box.type = 'checkbox';
+            box.checked = Boolean(entry.personalize);
+            box.addEventListener('change', function () {
+              items[id].personalize = box.checked;
+              save();
+              render();
+            });
+            personalizeLabel.appendChild(box);
+            personalizeLabel.append(' ' + personalization.label + ' ' + personalization.price_label);
+            name.appendChild(personalizeLabel);
+          }
 
           var controls = document.createElement('div');
           controls.className = 'basket-qty';
@@ -125,7 +161,7 @@ const catalogue = products
             if (index === 1) {
               var count = document.createElement('span');
               count.className = 'basket-count';
-              count.textContent = String(quantity);
+              count.textContent = String(entry.quantity);
               controls.appendChild(count);
             }
             controls.appendChild(button);
@@ -133,7 +169,7 @@ const catalogue = products
 
           var lineTotal = document.createElement('div');
           lineTotal.className = 'basket-line-total';
-          lineTotal.textContent = money(product.price * quantity);
+          lineTotal.textContent = money(product.price * entry.quantity);
 
           var remove = document.createElement('button');
           remove.type = 'button';
@@ -148,12 +184,27 @@ const catalogue = products
           row.appendChild(remove);
           list.appendChild(row);
         });
+
+        if (signedCount > 0) total += Number(personalization.price) * signedCount;
+        destinationBox.hidden = !anyShipped;
+        var intl = anyShipped && destination() === 'international';
+        if (intl) total += intlPrice;
+
         totalEl.textContent = money(total);
+
+        var notes = [];
+        if (signedCount > 0) notes.push(signedCount + ' signed ' + (signedCount === 1 ? 'copy' : 'copies') + ' · ' + personalization.cdNote);
+        if (anyShipped) notes.push(intl ? 'International shipping added.' : 'US shipping is included in the price.');
+        else notes.push('Downloads are emailed after your order — no address needed.');
+        notes.push('Tax, if any, is calculated at checkout.');
+        noteEl.textContent = notes.join(' ');
       }
 
       function change(id, delta) {
-        var next = (items[id] || 0) + delta;
-        if (next < 1) delete items[id]; else if (next <= 10) items[id] = next;
+        var entry = items[id] || { quantity: 0, personalize: false };
+        var next = entry.quantity + delta;
+        if (next < 1) delete items[id];
+        else if (next <= 10) items[id] = { quantity: next, personalize: entry.personalize };
         save();
         render();
       }
@@ -165,8 +216,12 @@ const catalogue = products
         });
       });
 
+      destinationBox.addEventListener('change', render);
+
       checkout.addEventListener('click', function () {
-        var payload = Object.keys(items).map(function (id) { return { id: id, quantity: items[id] }; });
+        var payload = Object.keys(items).map(function (id) {
+          return { id: id, quantity: items[id].quantity, personalize: Boolean(items[id].personalize) };
+        });
         if (payload.length === 0) return;
         checkout.disabled = true;
         checkout.textContent = 'Starting checkout…';
@@ -175,7 +230,7 @@ const catalogue = products
         fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: payload }),
+          body: JSON.stringify({ items: payload, destination: destination() }),
         })
           .then(function (response) {
             return response.json().catch(function () { return {}; }).then(function (data) {
