@@ -3,13 +3,13 @@
   "shipping": {
     "note": "US prices include shipping, so the US rate is a $0 Stripe rate that shows as 'Free'. International adds a flat charge. The buyer picks the destination in the basket, and the checkout only accepts addresses in the countries listed for that choice, so the two can never disagree.",
     "us": {
-      "rateId": "",
+      "rateId": "shr_1UUKKmHUcXUeVr0bCkEvAGcv",
       "countries": [
         "US"
       ]
     },
     "international": {
-      "rateId": "",
+      "rateId": "shr_1UUKKmHUcXUeVr0bAEmiWGsr",
       "price": "20.00",
       "countries": [
         "CA",
@@ -57,7 +57,7 @@
     "price_label": "+$15",
     "cdNote": "Cellophane is removed from signed CDs.",
     "checkoutQuestion": "Who should Jonah make it out to?",
-    "stripeProductId": ""
+    "stripeProductId": "prod_VVL0I0AJgpciHw"
   },
   "products": [
     {
@@ -69,7 +69,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "With pianist Robert Koenig, on Delos. The Kodály Solo Sonata, Mark Abel’s Approaching Autumn, and the Grieg sonata.",
-      "stripeProductId": "",
+      "stripeProductId": "prod_VVL01ASoSCMXLT",
       "image": "images/1632933394668-GY0ZGKMGR0DQPVJF7Q0S__Album-Cover.jpg",
       "listen": "https://newalbm.link/approachingautumn"
     },
@@ -82,7 +82,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "With pianist Sean Kennard, on Delos. The Rachmaninoff Sonata, Op. 19, and the Barber Sonata, Op. 6.",
-      "stripeProductId": "",
+      "stripeProductId": "prod_VVL0EGCbSYL3KN",
       "image": "images/1628813632426-CK1TW1MXC10KPJA1LTR4__image-asset.png",
       "listen": "https://smarturl.it/kimkennardrachbarber"
     },
@@ -95,7 +95,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "Trio Barclay’s debut album on Orchid Classics: new piano trios by Sheridan Seyfried, John Wineglass and Michael Fine.",
-      "stripeProductId": "",
+      "stripeProductId": "prod_VVL0DYMTBSZZqB",
       "image": "images/beyond-the-pacific-cover.jpg",
       "listen": "https://orchid-music.lnk.to/BeyondThePacificWE"
     },
@@ -108,7 +108,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "Trio Barclay.",
-      "stripeProductId": ""
+      "stripeProductId": "prod_VVL0mwPJSFaDsw"
     },
     {
       "id": "bach-i-adoration-cd",
@@ -119,7 +119,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "Bach Cello Suite No. 1, arranged and performed by Jonah Kim.",
-      "stripeProductId": "",
+      "stripeProductId": "prod_VVL0hXX9gboRTX",
       "image": "images/1584594505178-JNNRGNJPUL7GSKQJMDZ5__image-asset.jpeg"
     },
     {
@@ -131,7 +131,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "Bach Cello Suite No. 2.",
-      "stripeProductId": "",
+      "stripeProductId": "prod_VVL0gIxwUur1HD",
       "image": "images/1584594732917-5IQHCZL8TWNH55HCIZYP__image-asset.jpeg"
     },
     {
@@ -143,7 +143,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "Bach Cello Suite No. 3.",
-      "stripeProductId": "",
+      "stripeProductId": "prod_VVL0oYZC9SN7od",
       "image": "images/1585549921901-93LM07J57BQI3RSQ3ETD__BachSuite3-online-cover.jpg"
     },
     {
@@ -188,7 +188,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "The Chaconne from Bach’s Partita for Violin No. 2, transcribed for cello by Jonah Kim with notes by Edward Aldwell.",
-      "stripeProductId": ""
+      "stripeProductId": "prod_VVL0ZT3Za8veeY"
     },
     {
       "id": "bach-chaconne-pdf",
@@ -199,7 +199,7 @@
       "shipped": false,
       "personalizable": false,
       "description": "The same transcription as a PDF, emailed after your order.",
-      "stripeProductId": ""
+      "stripeProductId": "prod_VVL0Yt6iZBsnZa"
     },
     {
       "id": "trinity-hymns-print",
@@ -210,7 +210,7 @@
       "shipped": true,
       "personalizable": true,
       "description": "Hymns arranged for piano trio.",
-      "stripeProductId": ""
+      "stripeProductId": "prod_VVL0CISADX7xoy"
     },
     {
       "id": "trinity-hymns-pdf",
@@ -221,7 +221,7 @@
       "shipped": false,
       "personalizable": false,
       "description": "Hymns arranged for piano trio, emailed after your order.",
-      "stripeProductId": ""
+      "stripeProductId": "prod_VVL0KToea29EhP"
     },
     {
       "id": "popular-songs-print",

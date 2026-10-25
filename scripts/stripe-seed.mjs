@@ -59,6 +59,28 @@ for (const item of wanted) {
   console.log(`  ${found ? 'updated' : 'created'}  ${product.id}  ${item.name}`);
 }
 
+// Shipping rates: $0 for the US (postage is already in the price) and a flat international rate.
+const zones = [
+  { key: 'us', zone: data.shipping.us, amount: 0, name: 'Shipping included' },
+  { key: 'international', zone: data.shipping.international, amount: Math.round(Number(data.shipping.international.price) * 100), name: 'International shipping' },
+];
+
+const rates = [];
+for await (const rate of stripe.shippingRates.list({ limit: 100, active: true })) rates.push(rate);
+
+console.log('');
+for (const { key, zone, amount, name } of zones) {
+  const found = rates.find((rate) => rate.metadata?.jonahcello_zone === key);
+  const rate = found ?? await stripe.shippingRates.create({
+    display_name: name,
+    type: 'fixed_amount',
+    fixed_amount: { amount, currency: 'usd' },
+    metadata: { jonahcello_zone: key },
+  });
+  zone.rateId = rate.id;
+  console.log(`  ${found ? 'reused ' : 'created'}  ${rate.id}  ${name} ($${(amount / 100).toFixed(2)})`);
+}
+
 writeFileSync(STORE, `${JSON.stringify(data, null, 2)}\n`);
-console.log('\nWrote product IDs into src/data/store.json.');
-console.log('Still to do by hand: a $0 shipping rate in Stripe, with its shr_ ID in shipping.freeRateId.');
+console.log('\nWrote product and shipping IDs into src/data/store.json.');
+console.log(`These are ${mode} IDs — re-run with the live key before the store opens.`);
