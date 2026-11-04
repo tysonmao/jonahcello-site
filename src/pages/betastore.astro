@@ -193,7 +193,6 @@ const statusLabel = { 'out-of-stock': 'Out of stock', 'coming-soon': 'Coming soo
         if (signedCount > 0) notes.push(signedCount + ' signed ' + (signedCount === 1 ? 'copy' : 'copies') + ' · ' + personalization.cdNote);
         if (anyShipped) notes.push(intl ? 'International shipping added.' : 'US shipping is included in the price.');
         else notes.push('Downloads are emailed after your order — no address needed.');
-        notes.push('Tax, if any, is calculated at checkout.');
         noteEl.textContent = notes.join(' ');
       }
 

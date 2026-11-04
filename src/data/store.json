@@ -50,6 +50,11 @@
       ]
     }
   },
+  "tax": {
+    "behavior": "exclusive",
+    "tangibleCode": "txcd_99999999",
+    "digitalCode": "txcd_10302000"
+  },
   "personalization": {
     "id": "personalization",
     "price": "15.00",
@@ -267,5 +272,6 @@
       "description": "",
       "stripeProductId": ""
     }
-  ]
+  ],
+  "stripeMode": "LIVE"
 }

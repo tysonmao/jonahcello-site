@@ -22,6 +22,16 @@ const mode = key.startsWith('sk_live') || key.startsWith('rk_live') ? 'LIVE' : '
 const stripe = new Stripe(key);
 const data = JSON.parse(readFileSync(STORE, 'utf8'));
 
+// store.json can only hold one mode's IDs at a time, and the IDs it holds are what the live
+// site charges against. Running this with the other mode's key would silently replace them,
+// so it stops unless you say --force.
+const held = data.stripeMode;
+if (held && held !== mode && !process.argv.includes('--force')) {
+  console.error(`store.json holds ${held} Stripe IDs and this key is ${mode}.`);
+  console.error('Running would overwrite them. Re-run with --force if that is what you want.');
+  process.exit(1);
+}
+
 // Items that can be bought, plus the personalization add-on.
 const wanted = [
   ...data.products
@@ -31,12 +41,15 @@ const wanted = [
       id: product.id,
       name: `${product.title} (${product.format})`,
       description: product.description || undefined,
+      digital: !product.shipped,
     })),
   {
     ref: data.personalization,
     id: data.personalization.id,
     name: data.personalization.label,
     description: 'Signed and personalized by Jonah Kim.',
+    // Signing is done to a physical copy, so it follows the goods.
+    digital: false,
   },
 ];
 
@@ -50,7 +63,14 @@ for await (const product of stripe.products.list({ limit: 100 })) {
 
 for (const item of wanted) {
   const found = existing.get(item.id);
-  const fields = { name: item.name, description: item.description, metadata: { jonahcello_id: item.id } };
+  const fields = {
+    name: item.name,
+    description: item.description,
+    // What Stripe Tax treats the item as. Physical discs and printed scores are tangible goods;
+    // the PDFs are downloads, which many states tax differently (or not at all).
+    tax_code: item.digital ? data.tax.digitalCode : data.tax.tangibleCode,
+    metadata: { jonahcello_id: item.id },
+  };
   const product = found
     ? await stripe.products.update(found.id, fields)
     : await stripe.products.create(fields);
@@ -71,16 +91,21 @@ for await (const rate of stripe.shippingRates.list({ limit: 100, active: true })
 console.log('');
 for (const { key, zone, amount, name } of zones) {
   const found = rates.find((rate) => rate.metadata?.jonahcello_zone === key);
-  const rate = found ?? await stripe.shippingRates.create({
-    display_name: name,
-    type: 'fixed_amount',
-    fixed_amount: { amount, currency: 'usd' },
-    metadata: { jonahcello_zone: key },
-  });
+  // Shipping is taxable in some states, so the rate carries the same tax behaviour as the goods.
+  const rate = found
+    ? await stripe.shippingRates.update(found.id, { tax_behavior: data.tax.behavior })
+    : await stripe.shippingRates.create({
+      display_name: name,
+      type: 'fixed_amount',
+      fixed_amount: { amount, currency: 'usd' },
+      tax_behavior: data.tax.behavior,
+      metadata: { jonahcello_zone: key },
+    });
   zone.rateId = rate.id;
   console.log(`  ${found ? 'reused ' : 'created'}  ${rate.id}  ${name} ($${(amount / 100).toFixed(2)})`);
 }
 
+data.stripeMode = mode;
 writeFileSync(STORE, `${JSON.stringify(data, null, 2)}\n`);
 console.log('\nWrote product and shipping IDs into src/data/store.json.');
 console.log(`These are ${mode} IDs — re-run with the live key before the store opens.`);

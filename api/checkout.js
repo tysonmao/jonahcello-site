@@ -6,8 +6,17 @@ import storeData from '../src/data/store.json' with { type: 'json' };
 const MAX_QUANTITY = 10;
 const CURRENCY = 'usd';
 
+// Stripe Tax needs a tax_behavior on every amount it is asked to tax. 'exclusive' means the
+// listed price is pre-tax and sales tax is added at checkout, which is what US buyers expect.
+const TAX_BEHAVIOR = storeData.tax?.behavior || 'exclusive';
+
 const line = (stripeProductId, price, quantity, adjustable = true) => ({
-  price_data: { currency: CURRENCY, product: stripeProductId, unit_amount: Math.round(Number(price) * 100) },
+  price_data: {
+    currency: CURRENCY,
+    product: stripeProductId,
+    unit_amount: Math.round(Number(price) * 100),
+    tax_behavior: TAX_BEHAVIOR,
+  },
   quantity,
   ...(adjustable && { adjustable_quantity: { enabled: true, minimum: 1, maximum: MAX_QUANTITY } }),
 });
@@ -52,6 +61,12 @@ export function buildSessionParams(requested, origin, destination = 'us') {
     line_items: lineItems,
     success_url: `${origin}/order-complete.html?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/betastore.html`,
+    // Stripe Tax works out what is owed from where the buyer is. It only charges tax in places
+    // Jonah is registered, so until a registration exists this adds nothing to any order.
+    automatic_tax: { enabled: true },
+    // Tax needs a location. Shipped orders have one already; a downloads-only basket does not,
+    // so the billing address is always collected.
+    billing_address_collection: 'required',
     // A basket of downloads alone never asks for a postal address.
     ...(needsShipping && {
       shipping_address_collection: { allowed_countries: zone?.countries || ['US'] },
