@@ -60,7 +60,7 @@ export function buildSessionParams(requested, origin, destination = 'us') {
     mode: 'payment',
     line_items: lineItems,
     success_url: `${origin}/order-complete.html?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/betastore.html`,
+    cancel_url: `${origin}/store.html`,
     // Stripe Tax works out what is owed from where the buyer is. It only charges tax in places
     // Jonah is registered, so until a registration exists this adds nothing to any order.
     automatic_tax: { enabled: true },

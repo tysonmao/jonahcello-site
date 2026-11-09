@@ -2,8 +2,6 @@
 import Base from '../layouts/Base.astro';
 import data from '../data/store.json';
 
-// Dark launch: this page is not linked from the nav or the sitemap, and Base marks pages
-// without a `path` as noindex, so search engines leave it alone until the store is ready.
 const { products, personalization, shipping } = data;
 
 const sellable = (product) => product.status === 'available' && product.stripeProductId;
@@ -21,10 +19,13 @@ const catalogue = products.filter(sellable).map((product) => ({
 
 const statusLabel = { 'out-of-stock': 'Out of stock', 'coming-soon': 'Coming soon' };
 ---
-<Base title="Store (Beta) — Jonah Kim" description="Preview of the Jonah Kim store.">
-  <p class="beta-flag"><strong>Preview.</strong> This page is a work in progress and isn&rsquo;t linked from the site.{liveCount === 0
-    ? ' Checkout isn’t connected yet, so nothing can be bought here.'
-    : ' Orders placed here are real: your card is charged and Jonah ships the items.'}</p>
+<Base
+  path="/store.html"
+  active="store"
+  title="Store — Jonah Kim"
+  description="Signed CDs and sheet music direct from cellist Jonah Kim. US shipping included."
+>
+  {liveCount === 0 && <p class="beta-flag"><strong>Not open yet.</strong> Checkout isn&rsquo;t connected, so nothing can be bought here right now.</p>}
 
   <h1 class="page-title">Store</h1>
   <p class="contact-intro">Signed CDs and sheet music, direct from Jonah. Prices include US shipping.</p>

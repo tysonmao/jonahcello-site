@@ -4,22 +4,90 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/home", "destination": "/", "permanent": false },
-    { "source": "/about", "destination": "/about.html", "permanent": false },
-    { "source": "/listen", "destination": "/listen.html", "permanent": false },
-    { "source": "/stream", "destination": "/listen.html", "permanent": false },
-    { "source": "/gallery", "destination": "/gallery.html", "permanent": false },
-    { "source": "/gallery-1", "destination": "/gallery.html", "permanent": false },
-    { "source": "/photos", "destination": "/gallery.html", "permanent": false },
-    { "source": "/discography", "destination": "/discography.html", "permanent": false },
-    { "source": "/records", "destination": "/discography.html", "permanent": false },
-    { "source": "/calendar", "destination": "/calendar.html", "permanent": false },
-    { "source": "/concerts", "destination": "/calendar.html", "permanent": false },
-    { "source": "/contact", "destination": "/contact.html", "permanent": false },
-    { "source": "/store", "destination": "/discography.html", "permanent": false },
-    { "source": "/store.html", "destination": "/discography.html", "permanent": false },
-    { "source": "/betastore", "destination": "/betastore.html", "permanent": false },
-    { "source": "/blog", "destination": "/", "permanent": false },
-    { "source": "/blog/:path*", "destination": "/", "permanent": false }
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/about",
+      "destination": "/about.html",
+      "permanent": false
+    },
+    {
+      "source": "/listen",
+      "destination": "/listen.html",
+      "permanent": false
+    },
+    {
+      "source": "/stream",
+      "destination": "/listen.html",
+      "permanent": false
+    },
+    {
+      "source": "/gallery",
+      "destination": "/gallery.html",
+      "permanent": false
+    },
+    {
+      "source": "/gallery-1",
+      "destination": "/gallery.html",
+      "permanent": false
+    },
+    {
+      "source": "/photos",
+      "destination": "/gallery.html",
+      "permanent": false
+    },
+    {
+      "source": "/discography",
+      "destination": "/discography.html",
+      "permanent": false
+    },
+    {
+      "source": "/records",
+      "destination": "/discography.html",
+      "permanent": false
+    },
+    {
+      "source": "/calendar",
+      "destination": "/calendar.html",
+      "permanent": false
+    },
+    {
+      "source": "/concerts",
+      "destination": "/calendar.html",
+      "permanent": false
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact.html",
+      "permanent": false
+    },
+    {
+      "source": "/betastore",
+      "destination": "/store.html",
+      "permanent": false
+    },
+    {
+      "source": "/blog",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/blog/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/betastore.html",
+      "destination": "/store.html",
+      "permanent": false
+    },
+    {
+      "source": "/store",
+      "destination": "/store.html",
+      "permanent": false
+    }
   ]
 }

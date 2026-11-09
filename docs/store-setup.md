@@ -1,6 +1,6 @@
 # Store setup (Stripe)
 
-The beta store lives at `/betastore`. It is not linked from the site, and it only sells what has
+The store lives at `/store`. It sells only what has
 been set up in Stripe: a product with no `priceId` in `src/data/store.json` shows a disabled
 button and cannot go in the basket.
 
@@ -99,4 +99,4 @@ With the test key in place, buy something on the preview URL using Stripe's test
 4. Decide sales tax. Stripe Tax can calculate and collect it, but it costs extra per transaction
    and Jonah must register where he owes it — worth asking his accountant.
 5. Put the Store link back in the nav (`src/layouts/Base.astro`) and in `public/sitemap.xml`, and
-   remove the preview banner from `src/pages/betastore.astro`.
+   remove the preview banner from `src/pages/store.astro`.
