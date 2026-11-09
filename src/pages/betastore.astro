@@ -35,7 +35,12 @@ const statusLabel = { 'out-of-stock': 'Out of stock', 'coming-soon': 'Coming soo
         <div class="product-media">
           {product.image
             ? <img src={product.image} alt={`${product.title} cover`} loading="lazy" width="1000" height="1000">
-            : <div class="product-placeholder" aria-hidden="true"><span>{product.format}</span></div>}
+            : <div class="product-placeholder" aria-hidden="true">
+                <span class="placeholder-format">{product.format}</span>
+                <span class="placeholder-title" set:html={product.title}></span>
+                <span class="placeholder-rule"></span>
+                <span class="placeholder-mark">Jonah Kim</span>
+              </div>}
         </div>
         <div class="product-body">
           <p class="product-format">{product.format}</p>

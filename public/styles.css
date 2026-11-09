@@ -620,15 +620,31 @@ button.btn { cursor: pointer; border: none; font-family: inherit; }
 .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px 32px; }
 .product { display: flex; flex-direction: column; gap: 16px; }
 .product-media img { border-radius: 3px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+/* Covers Jonah hasn't supplied art for yet: a plain typographic sleeve, so the tile reads as
+   a designed cover rather than a missing image. Delete nothing here when art arrives — a
+   product with an `image` never renders this. */
 .product-placeholder {
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px;
+  padding: 10% 14%;
   aspect-ratio: 1 / 1;
   border: 1px solid var(--hairline);
   border-radius: 3px;
-  background: #f6f2f8;
+  background: linear-gradient(158deg, #f8f4fa 0%, #ece2f2 100%);
+  text-align: center;
 }
-.product-placeholder span {
-  font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+.placeholder-format {
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted);
+}
+.placeholder-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(0.95rem, 1.6vw + 0.4rem, 1.3rem);
+  line-height: 1.25;
+  color: var(--accent);
+}
+.placeholder-rule { width: 26px; height: 1px; background: var(--accent); opacity: 0.4; }
+.placeholder-mark {
+  font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
 }
 .product-body { display: flex; flex-direction: column; gap: 8px; }
 .product-format { margin: 0; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
