@@ -646,7 +646,9 @@ button.btn { cursor: pointer; border: none; font-family: inherit; }
 .placeholder-mark {
   font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
 }
-.product-body { display: flex; flex-direction: column; gap: 8px; }
+/* Fills the card so the buttons can sit at its foot; the grid already makes every card in
+   a row the same height, so this lines the buttons up across the row. */
+.product-body { display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .product-format { margin: 0; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 .product h2 {
   margin: 0;
@@ -658,7 +660,7 @@ button.btn { cursor: pointer; border: none; font-family: inherit; }
 .product-price { margin: 0; font-size: 1.05rem; color: var(--ink); font-variant-numeric: tabular-nums; }
 .price-was { margin-left: 10px; color: var(--muted); font-size: 0.9rem; text-decoration: line-through; }
 .product-description { margin: 0; font-size: 0.92rem; color: #33303a; }
-.product-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 4px; }
+.product-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: auto; padding-top: 4px; }
 .product-actions .btn { margin: 0; }
 .product-actions .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
 .product-actions .btn[disabled]:hover { background: var(--accent); border-color: var(--accent); }
@@ -731,6 +733,9 @@ button.btn { cursor: pointer; border: none; font-family: inherit; }
 .product-status {
   font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
   padding: 12px 0; display: inline-block;
+  /* Same line-height and padding as .btn, so an out-of-stock card's label occupies the same
+     box as another card's button and the row still lines up. */
+  line-height: normal;
 }
 .basket-personalize {
   display: flex; align-items: flex-start; gap: 8px;
